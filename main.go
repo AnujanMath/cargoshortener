@@ -1,88 +1,112 @@
 package main
 
 import (
-   //"encoding/json"
-    "log"
-    "net/http"
-//	"time"
-	"database/sql"
+  "go.mongodb.org/mongo-driver/bson"
+  "go.mongodb.org/mongo-driver/mongo"
+  "go.mongodb.org/mongo-driver/mongo/options"
+  //"go.mongodb.org/mongo-driver/bson/primitive"
+
+  "encoding/json"
+  "log"
+  "net/http"
+  "time"
+  //"go.mongodb.org/mongo-driver/bson"
+
+  "context"
   "fmt"
-"os"
-  
-	_ "github.com/lib/pq"
+  "os"
 
-   // "github.com/couchbase/gocb"
-    "github.com/gorilla/mux"
-    "github.com/joho/godotenv"
+  _ "github.com/lib/pq"
 
-  //  "github.com/speps/go-hashids"
+  // "github.com/couchbase/gocb"
+  "github.com/gorilla/mux"
+  "github.com/joho/godotenv"
+
+  "github.com/speps/go-hashids"
 )
+
 type UrlStruct struct {
-    ID       string `json:"id,omitempty"`
-    long  string `json:"long,omitempty"`
-    short string `json:"short,omitempty"`
-}	
-var db  *sql.DB
+  ID       string `json:"_id,omitempty"`
+  LongUrl  string `json:"longUrl,omitempty"`
+  ShortUrl string `json:"shortUrl,omitempty"`
+}
+
 var err error
+var db *mongo.Database
+var UrlCollection *mongo.Collection
+
 // var bucket *gocb.Bucket
-func ExpandEndpoint(w http.ResponseWriter, r *http.Request){//endpoint to grab long urls from short url
+func ExpandEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to grab long urls from short url
 
-} 
+}
 
-
-func CreateEndpoint(w http.ResponseWriter, r *http.Request){//endpoint to create a url entry
+func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to create a url entry
   fmt.Println("Endpoint hit")
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-  sqlStatement := `
-  INSERT INTO urls (long, short)
-  VALUES ($1, $2)
-  RETURNING id`
-    id := 0
-    var err = db.QueryRow(sqlStatement, "30", "jon@calhoun.io").Scan(&id)
-    if err != nil {
-      panic(err)
-    }
-    fmt.Println("New record ID is:", id)
-} 
-func RootEndpoint(w http.ResponseWriter, r *http.Request){ //grab long url from id
+  var url UrlStruct
+  var urls []UrlStruct
+  responseErr := json.NewDecoder(r.Body).Decode(&url)
+  if responseErr != nil {
+    http.Error(w, err.Error(), http.StatusBadRequest)
+    return
+  }
+  fmt.Println(url)
+  cursor, err := UrlCollection.Find(ctx, bson.M{"long": bson.D{{"$eq", url.LongUrl}}})
+  if err != nil {
+    w.WriteHeader(401)
 
-}  
+    panic(err)
+  }
+  if err = cursor.All(ctx, &urls); err != nil {
+    panic(err)
+  }
+  hd := hashids.NewData()
+  h, err := hashids.NewWithData(hd)
+  now := time.Now()
+  url.ID, _ = h.Encode([]int{int(now.Unix())})
+  url.ShortUrl = "http://localhost:3434/" + url.ID
+  //Update
+
+  insertResult, err := UrlCollection.InsertOne(ctx, bson.D{
+    {Key: "long", Value: url.LongUrl},
+    {Key: "short", Value: url.ShortUrl},
+    {Key: "_id", Value: url.ID},
+  })
+  if err != nil {
+    panic(err)
+  }
+  fmt.Println(insertResult.InsertedID)
+  json.NewEncoder(w).Encode(url)
+
+}
+func RootEndpoint(w http.ResponseWriter, r *http.Request) { //grab long url from id
+
+}
 
 func init() {
   // loads values from .env into the system
   if err := godotenv.Load(); err != nil {
-      log.Print("No .env file found")
+    log.Print("No .env file found")
   }
 }
 
-func main(){
+func main() {
   router := mux.NewRouter() // mux is used to match http requests with regstered routes
-  var (
-    host     = os.Getenv("HOST")
-    port     = 5432
-    user     = os.Getenv("USER")
-    password = os.Getenv("PASSWORD")
-    dbname   = os.Getenv("DBNAME")
-    )
-	  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-	  host, port, user, password, dbname)
-    db, err = sql.Open("postgres", psqlInfo)
-if err != nil {
-  panic(err)
-  
+  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("ATLAS_URI")))
+  if err != nil {
+    panic(err)
+  }
+  defer client.Disconnect(ctx)
+
+  db = client.Database("cargoshortener")
+
+  fmt.Println("Connected to MongoDB!")
+  UrlCollection = db.Collection("urls")
+
+  router.HandleFunc("/{id}", RootEndpoint).Methods("GET")
+  router.HandleFunc("/expand/", ExpandEndpoint).Methods("GET")
+  router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
+  log.Fatal(http.ListenAndServe(":3434", router)) //server start
 }
-defer db.Close()
-
-err = db.Ping()
-if err != nil {
-  panic(err)
-}
-
-fmt.Println("Successfully connected!")
-
-	router.HandleFunc("/{id}", RootEndpoint).Methods("GET") 
-	router.HandleFunc("/expand/", ExpandEndpoint).Methods("GET")
-	router.HandleFunc("/create/", CreateEndpoint).Methods("POST") 
-	log.Fatal(http.ListenAndServe(":3434", router)) //server start	
-}
-
