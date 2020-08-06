@@ -41,7 +41,6 @@ func ExpandEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to grab
 }
 
 func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to create a url entry
-  fmt.Println("Endpoint hit")
   ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
   var url UrlStruct
@@ -52,15 +51,6 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
     return
   }
   fmt.Println(url)
-  cursor, err := UrlCollection.Find(ctx, bson.M{"long": bson.D{{"$eq", url.LongUrl}}})
-  if err != nil {
-    w.WriteHeader(401)
-
-    panic(err)
-  }
-  if err = cursor.All(ctx, &urls); err != nil {
-    panic(err)
-  }
   hd := hashids.NewData()
   h, err := hashids.NewWithData(hd)
   now := time.Now()
