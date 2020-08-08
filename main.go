@@ -72,7 +72,9 @@ func init() {
     log.Print("No .env file found")
   }
 }
-
+func hello(w http.ResponseWriter, r *http.Request) {
+  fmt.Fprintln(w, "Hello World")
+}
 func main() {
   router := mux.NewRouter() // mux is used to match http requests with regstered routes
   ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -86,8 +88,11 @@ func main() {
 
   fmt.Println("Connected to MongoDB!")
   UrlCollection = db.Collection("urls")
+  router.HandleFunc("/", hello)
 
   router.HandleFunc("/{id}", RootEndpoint).Methods("GET")
   router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
-  log.Fatal(http.ListenAndServe(":3434", router)) //server start
+
+  log.Fatal(http.ListenAndServe(os.Getenv("OGPORT"), router)) //server start
+
 }
