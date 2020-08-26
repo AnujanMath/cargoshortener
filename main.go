@@ -39,7 +39,7 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
   h, err := hashids.NewWithData(hd)
   now := time.Now()
   url.ID, _ = h.Encode([]int{int(now.Unix())})
-  url.ShortUrl = "https://cargoshortener.herokuapp.com/" + url.ID
+  url.ShortUrl = "http://localhost" + os.Getenv("PORT") + "/" + url.ID
   //Update
 
   insertResult, err := UrlCollection.InsertOne(ctx, bson.D{
@@ -88,11 +88,10 @@ func main() {
 
   fmt.Println("Connected to MongoDB!")
   UrlCollection = db.Collection("urls")
-  router.HandleFunc("/", hello)
 
   router.HandleFunc("/{id}", RootEndpoint).Methods("GET")
   router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
 
-  log.Fatal(http.ListenAndServe(os.Getenv("OGPORT"), router)) //server start
+  log.Fatal(http.ListenAndServe(os.Getenv("PORT"), router)) //server start
 
 }
