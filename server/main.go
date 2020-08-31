@@ -92,6 +92,6 @@ func main() {
   router.HandleFunc("/{id}", RootEndpoint).Methods("GET")
   router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
 
-  log.Fatal(http.ListenAndServe(os.Getenv("PORT"), router)) //server start
+  log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router)) //server start
 
 }
