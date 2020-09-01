@@ -96,6 +96,6 @@ func main() {
   router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
   router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
 
-  log.Fatal(https.ListenAndServe(":"+os.Getenv("PORT"), router)) //server start
+  log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router)) //server start
 
 }
