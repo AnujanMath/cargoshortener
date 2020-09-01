@@ -78,10 +78,23 @@ func init() {
 func hello(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintln(w, "Hello World")
 }
+func GetPort() string {
+  var port = os.Getenv("PORT")
+  // Set a default port if there is nothing in the environment
+  if port == "" {
+    port = "4747"
+    fmt.Println("INFO: No PORT environment variable detected, defaulting to " + port)
+  }
+  return ":" + port
+}
 func main() {
   router := mux.NewRouter() // mux is used to match http requests with regstered routes
   ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("ATLAS_URI")))
+  uri := os.Getenv("ATLAS_URI")
+  if uri == "" {
+    fmt.Println("no connection string provided")
+  }
+  client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
   if err != nil {
     panic(err)
   }
@@ -96,6 +109,6 @@ func main() {
   router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
   router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
 
-  log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router)) //server start
+  log.Fatal(http.ListenAndServe(GetPort(), router)) //server start
 
 }
