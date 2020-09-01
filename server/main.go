@@ -39,7 +39,7 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
   h, err := hashids.NewWithData(hd)
   now := time.Now()
   url.ID, _ = h.Encode([]int{int(now.Unix())})
-  url.ShortUrl = "http://localhost" + os.Getenv("PORT") + "/" + url.ID
+  url.ShortUrl = "https://cargoshortener.herokuapp.com/" + url.ID
   //Update
 
   insertResult, err := UrlCollection.InsertOne(ctx, bson.D{
