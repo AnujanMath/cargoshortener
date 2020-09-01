@@ -28,7 +28,8 @@ var db *mongo.Database
 var UrlCollection *mongo.Collection
 
 func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to create a url entry
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+  defer cancel()
   var url UrlStruct
   responseErr := json.NewDecoder(r.Body).Decode(&url)
   if responseErr != nil {
@@ -58,7 +59,8 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
 }
 
 func RootEndpoint(w http.ResponseWriter, r *http.Request) { //grab long url from id
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+  defer cancel()
   params := mux.Vars(r)
   result := UrlCollection.FindOne(ctx, bson.M{"_id": params["id"]})
   var doc UrlStruct
@@ -89,7 +91,8 @@ func GetPort() string {
 }
 func main() {
   router := mux.NewRouter() // mux is used to match http requests with regstered routes
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+  defer cancel()
   uri := os.Getenv("ATLAS_URI")
   if uri == "" {
     fmt.Println("no connection string provided")
