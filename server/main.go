@@ -88,6 +88,7 @@ func main() {
 
   fmt.Println("Connected to MongoDB!")
   UrlCollection = db.Collection("urls")
+  router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
 
   router.HandleFunc("/{id}", RootEndpoint).Methods("GET")
   router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
