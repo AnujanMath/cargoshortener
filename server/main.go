@@ -41,7 +41,6 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
   now := time.Now()
   url.ID, _ = h.Encode([]int{int(now.Unix())})
   url.ShortUrl = "https://cargoshortener.herokuapp.com/" + url.ID
-  fmt.Println("well it got here")
 
   //Update
 
