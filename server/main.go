@@ -40,6 +40,8 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
   now := time.Now()
   url.ID, _ = h.Encode([]int{int(now.Unix())})
   url.ShortUrl = "https://cargoshortener.herokuapp.com/" + url.ID
+  fmt.Println("well it got here")
+
   //Update
 
   insertResult, err := UrlCollection.InsertOne(ctx, bson.D{
@@ -47,6 +49,7 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
     {Key: "ShortUrl", Value: url.ShortUrl},
     {Key: "_id", Value: url.ID},
   })
+
   if err != nil {
     panic(err)
   }
@@ -93,6 +96,6 @@ func main() {
   router.HandleFunc("/create/", CreateEndpoint).Methods("POST")
   router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
 
-  log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router)) //server start
+  log.Fatal(https.ListenAndServe(":"+os.Getenv("PORT"), router)) //server start
 
 }
