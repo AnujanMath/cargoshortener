@@ -13,6 +13,7 @@ import (
   "go.mongodb.org/mongo-driver/mongo/options"
   "log"
   "net/http"
+  "net/url"
   "os"
   "time"
 )
@@ -34,6 +35,10 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
   responseErr := json.NewDecoder(r.Body).Decode(&url)
   if responseErr != nil {
     http.Error(w, err.Error(), http.StatusBadRequest)
+    return
+  }
+  if isNotValidUrl(url.LongUrl) {
+    http.Error(w, "Invalid URL!", 422)
     return
   }
   hd := hashids.NewData()
@@ -87,6 +92,21 @@ func GetPort() string {
     fmt.Println("INFO: No PORT environment variable detected, defaulting to " + port)
   }
   return ":" + port
+}
+func isNotValidUrl(toTest string) bool {
+  _, err := url.ParseRequestURI(toTest)
+  if err != nil {
+    fmt.Println(err)
+    return true
+  }
+
+  u, err := url.Parse(toTest)
+  if err != nil || u.Scheme == "" || u.Host == "" {
+    fmt.Println(err)
+    return true
+  }
+
+  return false
 }
 func main() {
   router := mux.NewRouter() // mux is used to match http requests with regstered routes

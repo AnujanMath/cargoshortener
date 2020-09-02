@@ -32,15 +32,26 @@ class NameForm extends React.Component {
   }
 
   handleSubmit(event) {
+    let s = event.target[0].value;
+    if (!s.match(/^[a-zA-Z]+:\/\//)) {
+      s = "http://" + s;
+    }
     fetch("/create/", {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       method: "POST",
-      body: JSON.stringify({ longUrl: event.target[0].value }),
+      body: JSON.stringify({ longUrl: s }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        console.log(response);
+        if (response.status == 422) {
+          alert("Invalid URL!");
+        } else {
+          response = response.json();
+        }
+      })
       .then((data) => {
         alert("Your url is now available at: " + data.shortUrl);
       })
