@@ -21,14 +21,14 @@ class App extends React.Component {
 class NameForm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { value: "" };
+    this.state = { value: "", button: "" };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleChange(event) {
-    this.setState({ value: event.target.value });
+    this.setState({ value: event.target.value, button: true });
   }
 
   handleSubmit(event) {
@@ -45,19 +45,19 @@ class NameForm extends React.Component {
       body: JSON.stringify({ longUrl: s }),
     })
       .then((response) => {
-        console.log(response);
-        if (response.status == 422) {
+        if (response.status === 422) {
           alert("Invalid URL!");
         } else {
-          response = response.json();
+          response.json().then((data) => {
+            alert("Your url is now available at: " + data.shortUrl);
+          });
         }
-      })
-      .then((data) => {
-        alert("Your url is now available at: " + data.shortUrl);
       })
       .catch(function (res) {
         console.log(res);
       });
+    this.setState({ button: false });
+
     event.preventDefault();
   }
 
@@ -72,7 +72,7 @@ class NameForm extends React.Component {
             onChange={this.handleChange}
           />
         </label>
-        <input type="submit" value="Submit" />
+        <input type="submit" value="Submit" disabled={!this.state.button} />
       </form>
     );
   }
