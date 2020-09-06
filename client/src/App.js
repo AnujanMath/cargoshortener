@@ -3,8 +3,10 @@ import "./App.css";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import SendIcon from "@material-ui/icons/Send";
+import FileCopyIcon from "@material-ui/icons/FileCopy";
 import Alert from "@material-ui/lab/Alert";
 import Collapse from "@material-ui/core/Collapse";
+import Grid from "@material-ui/core/Grid";
 
 class App extends React.Component {
   constructor(props) {
@@ -17,8 +19,20 @@ class App extends React.Component {
   render() {
     return (
       <div>
-        <h1>CargoShortener</h1>
-        <NameForm></NameForm>
+        <Grid
+          container
+          width="100%"
+          direction="column"
+          justify="center"
+          alignItems="center"
+        >
+          <Grid item xs={12}>
+            <h1>CargoShortener</h1>
+          </Grid>
+          <Grid item width="100%" xs={12}>
+            <NameForm></NameForm>
+          </Grid>
+        </Grid>
       </div>
     );
   }
@@ -74,24 +88,38 @@ class NameForm extends React.Component {
   render() {
     return (
       <form onSubmit={this.handleSubmit} noValidate autoComplete="off">
-        <TextField
-          error={this.state.error}
-          id="outlined-error-helper-text"
-          label="Enter URL"
-          helperText={this.state.error ? "Invalid URL!" : ""}
-          variant="outlined"
-          onChange={this.handleChange}
-        />
-        <Button
-          variant="contained"
-          disabled={this.state.button}
-          color="primary"
-          endIcon={<SendIcon></SendIcon>}
-        >
-          Send
-        </Button>
+        <Grid container direction="row" justify="center" alignItems="center">
+          {" "}
+          <TextField
+            error={this.state.error}
+            id="outlined-error-helper-text"
+            label="Enter URL"
+            helperText={this.state.error ? "Invalid URL!" : ""}
+            variant="outlined"
+            onChange={this.handleChange}
+          />
+          <Button
+            variant="contained"
+            disabled={this.state.button}
+            color="primary"
+            justify="center"
+            endIcon={<SendIcon></SendIcon>}
+          >
+            Send
+          </Button>
+        </Grid>
+
         <Collapse in={this.state.collapse}>
           <Alert
+            icon={
+              <FileCopyIcon
+                style={{ cursor: "pointer" }}
+                fontSize="inherit"
+                onClick={() => {
+                  navigator.clipboard.writeText(this.state.url);
+                }}
+              />
+            }
             onClose={() => {
               this.setState({ collapse: false });
             }}
