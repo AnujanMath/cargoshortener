@@ -15,6 +15,7 @@ import (
   "net/http"
   "net/url"
   "os"
+  "sync"
   "time"
 )
 
@@ -27,6 +28,20 @@ type UrlStruct struct {
 var err error
 var db *mongo.Database
 var UrlCollection *mongo.Collection
+var wg sync.WaitGroup
+var mut sync.Mutex
+
+func sendRequest(url string) {
+  defer wg.Done() //Decerements wg counter
+  res, err := http.Get(url)
+  if err != nil {
+    panic(err)
+  }
+
+  mut.Lock() //While locked, second output will wait. After unlocked, second output will paste
+  defer mut.Unlock()
+  fmt.Printf("[%d] %s\n", res.StatusCode, url)
+}
 
 func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to create a url entry
   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -58,14 +73,23 @@ func CreateEndpoint(w http.ResponseWriter, r *http.Request) { //endpoint to crea
   if err != nil {
     panic(err)
   }
+  var validationArray [2]string
+  validationArray[0] = url.LongUrl
+  validationArray[1] = url.ShortUrl
   fmt.Println(insertResult.InsertedID)
+  for i := 0; i < 2; i++ {
+    go sendRequest(validationArray[i])
+    wg.Add(1)
+  }
+
+  wg.Wait()
   json.NewEncoder(w).Encode(url)
 }
 
 func RootEndpoint(w http.ResponseWriter, r *http.Request) { //grab long url from id
   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
   defer cancel()
-  params := mux.Vars(r)
+  params := mux.Vars(r) //Grab ID
   result := UrlCollection.FindOne(ctx, bson.M{"_id": params["id"]})
   var doc UrlStruct
   decodeErr := result.Decode(&doc)
@@ -93,7 +117,7 @@ func GetPort() string {
   }
   return ":" + port
 }
-func isNotValidUrl(toTest string) bool {
+func isNotValidUrl(toTest string) bool { //server side URL protocol validation
   _, err := url.ParseRequestURI(toTest)
   if err != nil {
     fmt.Println(err)
