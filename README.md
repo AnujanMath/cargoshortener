@@ -4,7 +4,7 @@ A threadsafe URL shortener built with Golang and React. [Demo available here!](h
 
 This project uses time hashing to avoid collisions of shortened URL's and goroutines in order to ping and validate the generated URL's are working correctly. 
 
-I built this project to familiarize myself with Go and dockerization. I learned a great deal about routing in Go and necessary steps in deploying a web app.
+I built this project to familiarize myself with Go and containerization. I learned a great deal about routing in Go and necessary steps in deploying a web app.
 
 
 ## Usage
