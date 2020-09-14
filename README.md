@@ -1,6 +1,6 @@
 # cargoshortener 🩳
 
-A threadsafe URL shortener built with Golang and React [DEMO](http://cargoshortener.herokuapp.com/).
+A threadsafe URL shortener built with Golang and React [DEMO](http://cargoshortener.herokuapp.com/)
 
 This project uses time hashing to avoid collisions of shortened URL's and goroutines in order to ping and validate the generated URL's are working correctly. 
 
