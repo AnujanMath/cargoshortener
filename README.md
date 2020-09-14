@@ -16,8 +16,3 @@ To launch the go server:
 
 To launch the client with: 
 `npm start `
-
-
-## Development  
-Download Deps
-`go mod download`  
